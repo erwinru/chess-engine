@@ -47,10 +47,6 @@ class Game:
             ]
         return ps
 
-    def check_possible_move(self, piece, pos_end):
-        if pos_end in piece.possible_moves(self.b):
-            return True
-
     def is_check(self):
         for piece in self.b.get_pieces():
             if piece.color != self.curr_player_color:
@@ -62,7 +58,8 @@ class Game:
         self.b.prev_board = self.b.board.copy()
         piece = self.b.make_move(pos_start, pos_end)
         self.check_castled(piece, pos_start, pos_end)
-        piece = self.check_pawn_prom(piece, pos_end)
+        self.check_pawn_prom(piece, pos_end)
+        return piece
 
     def check_castled(self, piece, pos_start, pos_end):
         if isinstance(piece, p.King):
@@ -86,9 +83,6 @@ class Game:
                     image=load("images/{}_rook.png".format(king.color)),
                 )
                 self.b.place_piece(rook)
-        if isinstance(piece, p.King) or isinstance(piece, p.Rook):
-            if not piece.has_moved:
-                piece.has_moved = True
 
     def check_pawn_prom(self, piece, pos_end):
         if isinstance(piece, p.Pawn):
@@ -128,13 +122,21 @@ class Game:
         new_y = self.notation_dict_y[y]
         return (new_x, new_y)
 
-    def print_all_possible_moves(self):
+    # including check
+    def get_all_legal_moves(self):
+        legal_moves = []
         for piece in self.b.get_pieces():
             if piece.color == self.curr_player_color:
-                print("{} {}:".format(piece.color, piece.name))
-                for move_pos in piece.possible_moves(self.b):
-                    print("{}".format(self.change_notation(move_pos)))
-                print("\n")
+                for move_end_pos in piece.possible_moves(self.b):
+                    start_pos = piece.pos
+                    self.move(start_pos, move_end_pos)
+                    if not self.is_check():
+                        legal_moves.append([start_pos, move_end_pos])
+                    self.b.make_move(move_end_pos, start_pos)
+                    self.b.board[self.b.board != self.b.prev_board] = self.b.prev_board[
+                        self.b.board != self.b.prev_board
+                    ]
+        return legal_moves
 
     def game_loop(self):
         run = True
@@ -150,25 +152,25 @@ class Game:
                         moved_piece = self.b.board[pos_start[1], pos_start[0]]
 
                 if event.type == pygame.MOUSEBUTTONUP:
-                    self.print_all_possible_moves()
                     mx_end, my_end = pygame.mouse.get_pos()
                     pos_end = self.get_board_pos(mx_end, my_end)
                     if (not self.b.is_empty(pos_start)) & self.right_player(
                         moved_piece
                     ):
-                        if self.check_possible_move(moved_piece, pos_end):
-                            self.move(pos_start, pos_end)
-                            if self.is_check():
-                                print(
-                                    "This move is not possible. Your king is check. Please make another move"
-                                )
-                                self.b.make_move(pos_end, pos_start)
-                                self.b.board[
-                                    self.b.board != self.b.prev_board
-                                ] = self.b.prev_board[self.b.board != self.b.prev_board]
-                            else:
-                                self.change_curr_player_color()
-                    self.g.remake_board(self.b)
+                        legal_moves = self.get_all_legal_moves()
+                        # print(legal_moves)
+                        move = [pos_start, pos_end]
+                        if move in legal_moves:
+                            piece = self.move(pos_start, pos_end)
+                            if isinstance(piece, p.King) or isinstance(piece, p.Rook):
+                                if not piece.has_moved:
+                                    piece.has_moved = True
+                            self.change_curr_player_color()
+                            self.g.remake_board(self.b)
+                        else:
+                            print(
+                                "This move is not possible! Please make an other move"
+                            )
 
 
 if __name__ == "__main__":

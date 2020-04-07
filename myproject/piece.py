@@ -3,9 +3,10 @@ import itertools
 
 
 class Piece:
-    def __init__(self, start_pos, color, image):
+    def __init__(self, start_pos, color, value, image):
         self.pos = start_pos
         self.color = color
+        self.value = value
         self.image = image
 
     def rel_pos(self, rel_x, rel_y):
@@ -78,8 +79,8 @@ class Pawn(Piece):
 class Rook(Piece):
     name = "Rook"
 
-    def __init__(self, start_pos, color, image, has_moved=False):
-        super().__init__(start_pos, color, image)
+    def __init__(self, start_pos, color, value, image, has_moved=False):
+        super().__init__(start_pos, color, value, image)
         self.has_moved = has_moved
 
     def possible_moves(self, b):
@@ -144,8 +145,8 @@ class Queen(Piece):
 class King(Piece):
     name = "King"
 
-    def __init__(self, start_pos, color, image, has_moved=False):
-        super().__init__(start_pos, color, image)
+    def __init__(self, start_pos, color, value, image, has_moved=False):
+        super().__init__(start_pos, color, value, image)
         self.has_moved = has_moved
 
     def possible_moves(self, b):

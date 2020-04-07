@@ -3,7 +3,7 @@
 import pygame
 from pygame.image import load
 
-import board as b
+import board
 import piece as p
 import gui as g
 import sys
@@ -11,13 +11,15 @@ import sys
 
 class Game:
     check = False
+    notation_dict_x = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
+    notation_dict_y = {0: 8, 1: 7, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1}
 
     def __init__(self, starting_player="w"):
-        self.player_turn = starting_player
+        self.curr_player_color = starting_player
         pieces = self.create_pieces()
-        board = b.Board(pieces)
-        self.g = g.GUI(board)
-        self.game_loop(board)
+        self.b = board.Board(pieces)
+        self.g = g.GUI(self.b)
+        self.game_loop()
 
     def create_pieces(self):
         ps = [
@@ -45,64 +47,65 @@ class Game:
             ]
         return ps
 
-    def possible_move(self, piece, b, pos_end):
-        if pos_end in piece.possible_moves(b):
+    def check_possible_move(self, piece, pos_end):
+        if pos_end in piece.possible_moves(self.b):
             return True
 
-    def is_check(self, b):
-        for piece in b.get_pieces():
-            for move in piece.possible_moves(b):
-                if move == b.get_king_pos(self.player_turn):
-                    return True
+    def is_check(self):
+        for piece in self.b.get_pieces():
+            if piece.color != self.curr_player_color:
+                for move_pos in piece.possible_moves(self.b):
+                    if move_pos == self.b.get_king_pos(self.curr_player_color):
+                        return True
 
-    def move(self, b, pos_start, pos_end):
-        b.prev_board = b.board.copy()
-        piece = b.make_move(pos_start, pos_end)
-        self.check_castled(b, piece, pos_start, pos_end)
-        piece = self.check_pawn_prom(b, piece, pos_end)
+    def move(self, pos_start, pos_end):
+        self.b.prev_board = self.b.board.copy()
+        piece = self.b.make_move(pos_start, pos_end)
+        self.check_castled(piece, pos_start, pos_end)
+        piece = self.check_pawn_prom(piece, pos_end)
 
-    def check_castled(self, b, piece, pos_start, pos_end):
+    def check_castled(self, piece, pos_start, pos_end):
         if isinstance(piece, p.King):
             king = piece
             pos_diff = pos_start[0] - pos_end[0]
             # short castleing
             if pos_diff == -2:
-                b.board[king.rel_pos(1, 0)[1], king.rel_pos(1, 0)[0]] = 0
+                self.b.board[king.rel_pos(1, 0)[1], king.rel_pos(1, 0)[0]] = 0
                 rook = p.Rook(
                     king.rel_pos(-1, 0),
                     color=king.color,
                     image=load("images/{}_rook.png".format(king.color)),
                 )
-                b.place_piece(rook)
+                self.b.place_piece(rook)
             # long castleing
             elif pos_diff == 2:
-                b.board[king.rel_pos(-2, 0)[1], king.rel_pos(-2, 0)[0]] = 0
+                self.b.board[king.rel_pos(-2, 0)[1], king.rel_pos(-2, 0)[0]] = 0
                 rook = p.Rook(
                     king.rel_pos(1, 0),
                     color=king.color,
                     image=load("images/{}_rook.png".format(king.color)),
                 )
-                b.place_piece(rook)
+                self.b.place_piece(rook)
         if isinstance(piece, p.King) or isinstance(piece, p.Rook):
             if not piece.has_moved:
                 piece.has_moved = True
 
-    def check_pawn_prom(self, b, piece, pos_end):
+    def check_pawn_prom(self, piece, pos_end):
         if isinstance(piece, p.Pawn):
-            if (piece.color == "w") & (piece.pos[1] == b.lu):
+            if (piece.color == "w") & (piece.pos[1] == self.b.ul):
                 piece = p.Queen(
                     (pos_end[0], pos_end[1]),
                     color=piece.color,
                     image=load("images/w_queen.png"),
                 )
-                b.place_piece(piece)
-            elif (piece.color == "b") & (piece.pos[1] == b.ld):
+                self.b.place_piece(piece)
+            elif (piece.color == "b") & (piece.pos[1] == self.b.ll):
                 piece = p.Queen(
                     (pos_end[0], pos_end[1]),
                     color=piece.color,
                     image=load("images/b_queen.png"),
                 )
-                b.place_piece(piece)
+                self.b.place_piece(piece)
         return piece
 
     def get_board_pos(self, mx_pos, my_pos):
@@ -110,41 +113,62 @@ class Game:
         return x, y
 
     def right_player(self, piece):
-        return piece.color == self.player_turn
+        return piece.color == self.curr_player_color
 
-    def change_player_turn(self):
-        if self.player_turn == "b":
-            self.player_turn = "w"
+    def change_curr_player_color(self):
+        if self.curr_player_color == "b":
+            self.curr_player_color = "w"
         else:
-            self.player_turn = "b"
+            self.curr_player_color = "b"
 
-    def game_loop(self, b):
+    def change_notation(self, pos):
+        x = pos[0]
+        y = pos[1]
+        new_x = self.notation_dict_x[x]
+        new_y = self.notation_dict_y[y]
+        return (new_x, new_y)
+
+    def print_all_possible_moves(self):
+        for piece in self.b.get_pieces():
+            if piece.color == self.curr_player_color:
+                print("{} {}:".format(piece.color, piece.name))
+                for move_pos in piece.possible_moves(self.b):
+                    print("{}".format(self.change_notation(move_pos)))
+                print("\n")
+
+    def game_loop(self):
         run = True
         while run:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
+
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mx_start, my_start = pygame.mouse.get_pos()
                     pos_start = self.get_board_pos(mx_start, my_start)
-                    if not b.is_empty(pos_start):
-                        piece = b.board[pos_start[1], pos_start[0]]
+                    if not self.b.is_empty(pos_start):
+                        moved_piece = self.b.board[pos_start[1], pos_start[0]]
 
                 if event.type == pygame.MOUSEBUTTONUP:
+                    self.print_all_possible_moves()
                     mx_end, my_end = pygame.mouse.get_pos()
                     pos_end = self.get_board_pos(mx_end, my_end)
-                    if (not b.is_empty(pos_start)) & self.right_player(piece):
-                        if self.possible_move(piece, b, pos_end):
-                            self.move(b, pos_start, pos_end)
-                            if self.is_check(b):
-                                print("Your king is check. Please make another move")
-                                b.make_move(pos_end, pos_start)
-                                b.board[b.board != b.prev_board] = b.prev_board[
-                                    b.board != b.prev_board
-                                ]
+                    if (not self.b.is_empty(pos_start)) & self.right_player(
+                        moved_piece
+                    ):
+                        if self.check_possible_move(moved_piece, pos_end):
+                            self.move(pos_start, pos_end)
+                            if self.is_check():
+                                print(
+                                    "This move is not possible. Your king is check. Please make another move"
+                                )
+                                self.b.make_move(pos_end, pos_start)
+                                self.b.board[
+                                    self.b.board != self.b.prev_board
+                                ] = self.b.prev_board[self.b.board != self.b.prev_board]
                             else:
-                                self.change_player_turn()
-                    self.g.remake_board(b)
+                                self.change_curr_player_color()
+                    self.g.remake_board(self.b)
 
 
 if __name__ == "__main__":

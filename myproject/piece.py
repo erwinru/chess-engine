@@ -18,7 +18,7 @@ class Piece:
         m = []
         for ori in ("h", "v"):
             for direction in (+1, -1):
-                start = direction * (b.lu + 1)
+                start = direction * (b.ul + 1)
                 stop = direction * (_range + 1)
                 step = direction
                 for j in range(start, stop, step):
@@ -45,6 +45,8 @@ class Piece:
 
 
 class Pawn(Piece):
+    name = "Pawn"
+
     def possible_moves(self, b):
         m = []
         # moving
@@ -66,6 +68,7 @@ class Pawn(Piece):
                 if not b.is_empty(self.rel_pos(*pos)):
                     if self.diff_color(b, self.rel_pos(*pos)):
                         m.append(self.rel_pos(*pos))
+        # print("{} Pawn:".format(self.color), m)
         return m
 
     def __repr__(self):
@@ -73,18 +76,25 @@ class Pawn(Piece):
 
 
 class Rook(Piece):
+    name = "Rook"
+
     def __init__(self, start_pos, color, image, has_moved=False):
         super().__init__(start_pos, color, image)
         self.has_moved = has_moved
 
     def possible_moves(self, b):
-        return self.move_line(b, _range=b.ld, orientation="straight")
+        m = []
+        m += self.move_line(b, _range=b.ll, orientation="straight")
+        # print("{} Rook:".format(self.color), m)
+        return m
 
     def __repr__(self):
         return "R_{}".format(self.color)
 
 
 class Knight(Piece):
+    name = "Knight"
+
     def possible_moves(self, b):
         comb = itertools.permutations((1, -1, 2, -2), 2)
         rel_poss = [x for x in comb if sum([abs(x[0]), abs(x[1])]) == 3]
@@ -97,6 +107,7 @@ class Knight(Piece):
                 else:
                     if self.diff_color(b, pos):
                         m.append(pos)
+        # print("{} Knight:".format(self.color), m)
         return m
 
     def __repr__(self):
@@ -104,18 +115,26 @@ class Knight(Piece):
 
 
 class Bishop(Piece):
+    name = "Bishop"
+
     def possible_moves(self, b):
-        return self.move_line(b, _range=b.ld, orientation="diagonal")
+        m = []
+        m += self.move_line(b, _range=b.ll, orientation="diagonal")
+        # print("{} Bishop:".format(self.color), m)
+        return m
 
     def __repr__(self):
         return "B_{}".format(self.color)
 
 
 class Queen(Piece):
+    name = "Queen"
+
     def possible_moves(self, b):
         m = []
-        m += self.move_line(b, _range=b.ld, orientation="diagonal")
-        m += self.move_line(b, _range=b.ld, orientation="straight")
+        m += self.move_line(b, _range=b.ll, orientation="diagonal")
+        m += self.move_line(b, _range=b.ll, orientation="straight")
+        # print("{} Queen:".format(self.color), m)
         return m
 
     def __repr__(self):
@@ -123,6 +142,8 @@ class Queen(Piece):
 
 
 class King(Piece):
+    name = "King"
+
     def __init__(self, start_pos, color, image, has_moved=False):
         super().__init__(start_pos, color, image)
         self.has_moved = has_moved
@@ -135,6 +156,7 @@ class King(Piece):
             m.append(self.rel_pos(2, 0))
         if self.long_castleing(b):
             m.append(self.rel_pos(-2, 0))
+        # print("{} King:".format(self.color), m)
         return m
 
     def short_castleing(self, b):

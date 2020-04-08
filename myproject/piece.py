@@ -51,10 +51,10 @@ class Pawn(Piece):
     def possible_moves(self, b):
         m = []
         # moving
-        if self.color == "w":
+        if self.color is True:
             dir = -1
             start_line = 6
-        elif self.color == "b":
+        elif self.color is False:
             dir = +1
             start_line = 1
         if b.empty_on_board(self.rel_pos(0, dir * 1)):

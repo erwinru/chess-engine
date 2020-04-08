@@ -120,6 +120,9 @@ class Game:
                     best_eval = self.ai.minimax(
                         position=b.board, depth=1, maximizingPlayer=False
                     )
+                    from IPython import embed
+
+                    embed()
                     new_position, moved_piece = self.ai.move(
                         best_eval, self.curr_player, curr_board
                     )

@@ -28,10 +28,9 @@ class Board:
     def full_move(self, parent_position, pos_start, pos_end):
         self.prev_board = self.board.copy()
         piece = parent_position[pos_start[1], pos_start[0]]
-        self.prev_piece_pos = piece.pos
         parent_position[pos_end[1], pos_end[0]] = piece
         parent_position[pos_start[1], pos_start[0]] = 0
-        piece.pos = (pos_end[0], pos_end[1])
+        self.update_piece_pos(parent_position)
 
         self.check_castled(piece, pos_start, pos_end)
         self.check_pawn_prom(piece, pos_end)
@@ -58,21 +57,18 @@ class Board:
                     self.board[self.board != self.prev_board] = self.prev_board[
                         self.board != self.prev_board
                     ]
-                    piece.pos = self.prev_piece_pos
+                    self.update_piece_pos(parent_position)
         return legal_moves
 
     def get_child_positions(self, parent_position, curr_player):
-        # parent_position = self.board.copy()
         child_positions = []
         for move in self.get_all_legal_moves(parent_position, curr_player):
-            piece = parent_position[move[0][1], move[0][0]]
-            prev_piece_pos = piece.pos
             self.full_move(parent_position, move[0], move[1])
             child_positions += [self.board.copy()]
             self.board[self.board != self.prev_board] = self.prev_board[
                 self.board != self.prev_board
             ]
-            piece.pos = prev_piece_pos
+            self.update_piece_pos(parent_position)
         return child_positions
 
     def is_check(self, position, curr_player):
@@ -167,3 +163,10 @@ class Board:
             for y in range(8):
                 if piece == self.board[y, x]:
                     return (x, y)
+
+    def update_piece_pos(self, position):
+        for piece in self.get_pieces(position):
+            if piece.pos != self.find_board_coordinates(piece):
+                moved_piece = piece
+                piece.pos = self.find_board_coordinates(piece)
+                return moved_piece

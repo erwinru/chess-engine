@@ -17,16 +17,24 @@ class AI:
             for child_position in self.b.get_child_positions(
                 position, maximizingPlayer
             ):
+                # from IPython import embed
+                #
+                # embed()
                 eval = self.minimax(child_position, depth - 1, False)
                 maxEval = max(maxEval, eval)
                 self.minmax_walkthroughs += 1
             return maxEval
         else:
             minEval = float("inf")
+            # from IPython import embed
+            #
+            # embed()
             for child_position in self.b.get_child_positions(
                 position, maximizingPlayer
             ):
-                self.b.get_child_positions
+                # from IPython import embed
+                #
+                # embed()
                 eval = self.minimax(child_position, depth - 1, True)
                 minEval = min(minEval, eval)
                 self.minmax_walkthroughs += 1
@@ -38,12 +46,9 @@ class AI:
     def move(self, best_eval, curr_player, curr_board):
         best_positions = [
             child
-            for child in self.b.get_child_positions(self.b.board, curr_player)
+            for child in self.b.get_child_positions(curr_board, curr_player)
             if self.eval_board(child) == best_eval
         ]
-        from IPython import embed
-
-        embed()
         best_positions = np.array(best_positions)
         random = np.random.randint(0, best_positions.shape[0])
         selected_position = best_positions[random, :]

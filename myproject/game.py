@@ -116,15 +116,15 @@ class Game:
                                     "This move is not possible! Please make another move"
                                 )
                 else:
-                    curr_board = b.board.copy()
+                    ai_calculating_board = b.board.copy()
                     best_eval = self.ai.minimax(
-                        position=b.board, depth=1, maximizingPlayer=False
+                        position=ai_calculating_board, depth=2, maximizingPlayer=False
                     )
-                    from IPython import embed
-
-                    embed()
+                    # from IPython import embed
+                    #
+                    # embed()
                     new_position, moved_piece = self.ai.move(
-                        best_eval, self.curr_player, curr_board
+                        best_eval, self.curr_player, ai_calculating_board
                     )
                     if isinstance(piece, p.King) or isinstance(piece, p.Rook):
                         if not piece.has_moved:

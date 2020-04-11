@@ -47,26 +47,36 @@ class Board:
 
     def get_all_legal_moves(self, parent_position, curr_player):
         legal_moves = []
+        prev_board = parent_position.copy()
         for piece in self.get_pieces(parent_position):
             if piece.color == curr_player:
+                # if not curr_player:
+                #
+                #     from IPython import embed
+                #
+                #     embed()
                 for move_end_pos in piece.possible_moves(self):
                     start_pos = piece.pos
                     self.full_move(parent_position, start_pos, move_end_pos)
                     if not self.is_check(parent_position, curr_player):
                         legal_moves.append([start_pos, move_end_pos])
-                    self.board[self.board != self.prev_board] = self.prev_board[
-                        self.board != self.prev_board
+                    parent_position[parent_position != prev_board] = prev_board[
+                        parent_position != prev_board
                     ]
                     self.update_piece_pos(parent_position)
         return legal_moves
 
     def get_child_positions(self, parent_position, curr_player):
         child_positions = []
+        prev_board = parent_position.copy()
         for move in self.get_all_legal_moves(parent_position, curr_player):
+            # from IPython import embed
+            #
+            # embed()
             self.full_move(parent_position, move[0], move[1])
-            child_positions += [self.board.copy()]
-            self.board[self.board != self.prev_board] = self.prev_board[
-                self.board != self.prev_board
+            child_positions += [parent_position.copy()]
+            parent_position[parent_position != prev_board] = prev_board[
+                parent_position != prev_board
             ]
             self.update_piece_pos(parent_position)
         return child_positions

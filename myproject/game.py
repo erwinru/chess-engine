@@ -15,11 +15,11 @@ class Game:
     notation_dict_y = {0: 8, 1: 7, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1}
 
     def __init__(self, starting_player=True):
-        self.curr_player = starting_player
+        self.is_player_white = starting_player
         pieces = self.create_pieces()
         b = board.Board(pieces)
         self.g = g.GUI(b)
-        self.ai = ai.AI(b)
+        self.ai = ai.AI(b, self.is_player_white)
         self.game_loop(b)
 
     def create_pieces(self):
@@ -63,13 +63,13 @@ class Game:
         return x, y
 
     def right_player(self, piece):
-        return piece.color == self.curr_player
+        return piece.color == self.is_player_white
 
     def change_curr_player(self):
-        if self.curr_player is False:
-            self.curr_player = True
+        if self.is_player_white is False:
+            self.is_player_white = True
         else:
-            self.curr_player = False
+            self.is_player_white = False
 
     def change_notation(self, pos):
         x = pos[0]
@@ -86,7 +86,7 @@ class Game:
                 if event.type == pygame.QUIT:
                     sys.exit()
 
-                if self.curr_player:
+                if self.is_player_white:
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         mx_start, my_start = pygame.mouse.get_pos()
                         pos_start = self.get_board_pos(mx_start, my_start)
@@ -98,7 +98,7 @@ class Game:
                         pos_end = self.get_board_pos(mx_end, my_end)
                         if (not b.is_empty(pos_start)) & self.right_player(moved_piece):
                             legal_moves = b.get_all_legal_moves(
-                                b.board, self.curr_player
+                                b.board, self.is_player_white
                             )
                             # print(legal_moves)
                             move = [pos_start, pos_end]
@@ -117,20 +117,14 @@ class Game:
                                 )
                 else:
                     ai_calculating_board = b.board.copy()
-                    best_eval = self.ai.minimax(
-                        position=ai_calculating_board, depth=2, maximizingPlayer=False
-                    )
-                    # from IPython import embed
-                    #
-                    # embed()
-                    new_position, moved_piece = self.ai.move(
-                        best_eval, self.curr_player, ai_calculating_board
-                    )
-                    if isinstance(piece, p.King) or isinstance(piece, p.Rook):
-                        if not piece.has_moved:
-                            piece.has_moved = True
-                    self.change_curr_player()
+                    new_position, moved_piece = self.ai.move(ai_calculating_board)
+                    if isinstance(moved_piece, p.King) or isinstance(
+                        moved_piece, p.Rook
+                    ):
+                        if not moved_piece.has_moved:
+                            moved_piece.has_moved = True
                     self.g.remake_board(b)
+                    self.change_curr_player()
 
 
 if __name__ == "__main__":

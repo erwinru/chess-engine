@@ -3,56 +3,70 @@ import numpy as np
 
 
 class AI:
-    def __init__(self, board):
+    depth = 2
+
+    def __init__(self, board, is_player_white):
         self.b = board
-        self.position_eval = []
-        self.minmax_walkthroughs = 0
+        self.is_ai_white = not is_player_white
+
+        self.board_caches = {}
         pass
 
-    def minimax(self, position, depth, maximizingPlayer):
+    def minimax(self, position, depth, is_maxing_white):
         if depth == 0:
-            return self.eval_board(position)
-        if maximizingPlayer:
-            maxEval = float("-inf")
-            for child_position in self.b.get_child_positions(
-                position, maximizingPlayer
-            ):
-                # from IPython import embed
-                #
-                # embed()
-                eval = self.minimax(child_position, depth - 1, False)
-                maxEval = max(maxEval, eval)
-                self.minmax_walkthroughs += 1
-            return maxEval
+            self.board_caches[
+                self.hash_board(position, depth, is_maxing_white)
+            ] = self.eval_board(position)
+            return self.board_caches[self.hash_board(position, depth, is_maxing_white)]
+
+        best_score = float("-inf") if is_maxing_white else float("inf")
+
+        for child_pos in self.b.get_child_positions(position, is_maxing_white):
+            local_score = self.minimax(child_pos, depth - 1, False)
+            self.board_caches[
+                self.hash_board(position, depth, is_maxing_white)
+            ] = local_score
+
+        if is_maxing_white:
+            best_score = max(best_score, local_score)
+
         else:
-            minEval = float("inf")
-            # from IPython import embed
-            #
-            # embed()
-            for child_position in self.b.get_child_positions(
-                position, maximizingPlayer
-            ):
-                # from IPython import embed
-                #
-                # embed()
-                eval = self.minimax(child_position, depth - 1, True)
-                minEval = min(minEval, eval)
-                self.minmax_walkthroughs += 1
-            return minEval
+            best_score = min(best_score, local_score)
+
+        self.board_caches[
+            self.hash_board(position, depth, is_maxing_white)
+        ] = best_score
+
+        return self.board_caches[self.hash_board(position, depth, is_maxing_white)]
+
+    def hash_board(self, position, depth, is_maxing_white):
+        return str(position) + " " + str(depth) + " " + str(is_maxing_white)
 
     def eval_board(self, position):
         return sum([piece.value for piece in self.b.get_pieces(position)])
 
-    def move(self, best_eval, curr_player, curr_board):
-        best_positions = [
-            child
-            for child in self.b.get_child_positions(curr_board, curr_player)
-            if self.eval_board(child) == best_eval
-        ]
-        best_positions = np.array(best_positions)
-        random = np.random.randint(0, best_positions.shape[0])
-        selected_position = best_positions[random, :]
-        self.b.board = selected_position
-        moved_piece = self.b.update_piece_pos(selected_position)
+    def move(self, position):
+        global_score = float("-inf") if self.is_ai_white else float("inf")
+        chosen_move = None
 
-        return selected_position, moved_piece
+        for child_pos in self.b.get_child_positions(position, self.is_ai_white):
+
+            local_score = self.minimax(child_pos, self.depth - 1, not self.is_ai_white)
+            self.board_caches[
+                self.hash_board(child_pos, self.depth - 1, not self.is_ai_white)
+            ] = local_score
+
+            if self.is_ai_white and local_score > global_score:
+                global_score = local_score
+                chosen_pos = child_pos
+            elif not self.is_ai_white and local_score < global_score:
+                global_score = local_score
+                chosen_pos = child_pos
+
+            print(local_score, child_pos)
+
+        print(str(global_score) + " " + str(chosen_move) + "\n")
+
+        self.b.board = chosen_pos
+        moved_piece = self.b.update_piece_pos(chosen_pos)
+        return chosen_pos, moved_piece

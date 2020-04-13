@@ -48,7 +48,7 @@ class Piece:
         name = self.name
         if self.color is False:
             name = name.lower()
-        return "{}".format(self.name)
+        return "{}".format(name)
 
 
 class Pawn(Piece):
@@ -92,7 +92,7 @@ class Rook(Piece):
 
 
 class Knight(Piece):
-    name = "n"
+    name = "N"
 
     def possible_moves(self, b):
         comb = itertools.permutations((1, -1, 2, -2), 2)

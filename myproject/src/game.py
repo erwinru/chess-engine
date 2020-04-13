@@ -119,6 +119,9 @@ class Game:
                     self.check_king_or_rook_move(moved_piece)
                     self.g.remake_board(b)
                     self.change_curr_player()
+                    from IPython import embed
+
+                    embed()
 
 
 if __name__ == "__main__":

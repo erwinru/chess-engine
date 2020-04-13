@@ -66,10 +66,7 @@ class Game:
         return piece.color == self.is_player_white
 
     def change_curr_player(self):
-        if self.is_player_white is False:
-            self.is_player_white = True
-        else:
-            self.is_player_white = False
+        self.is_player_white = not self.is_player_white
 
     def change_notation(self, pos):
         x = pos[0]
@@ -77,6 +74,11 @@ class Game:
         new_x = self.notation_dict_x[x]
         new_y = self.notation_dict_y[y]
         return (new_x, new_y)
+
+    def check_king_or_rook_move(self, moved_piece):
+        if isinstance(moved_piece, p.King) or isinstance(moved_piece, p.Rook):
+            if not moved_piece.has_moved:
+                moved_piece.has_moved = True
 
     def game_loop(self, b):
 
@@ -91,24 +93,18 @@ class Game:
                         mx_start, my_start = pygame.mouse.get_pos()
                         pos_start = self.get_board_pos(mx_start, my_start)
                         if not b.is_empty(pos_start):
-                            moved_piece = b.board[pos_start[1], pos_start[0]]
+                            moved_piece = b.board[-1][pos_start[1], pos_start[0]]
 
                     if event.type == pygame.MOUSEBUTTONUP:
                         mx_end, my_end = pygame.mouse.get_pos()
                         pos_end = self.get_board_pos(mx_end, my_end)
                         if (not b.is_empty(pos_start)) & self.right_player(moved_piece):
-                            legal_moves = b.get_all_legal_moves(
-                                b.board, self.is_player_white
-                            )
-                            # print(legal_moves)
+                            legal_moves = b.get_all_legal_moves()
+
                             move = [pos_start, pos_end]
                             if move in legal_moves:
-                                piece = b.full_move(b.board, pos_start, pos_end)
-                                if isinstance(piece, p.King) or isinstance(
-                                    piece, p.Rook
-                                ):
-                                    if not piece.has_moved:
-                                        piece.has_moved = True
+                                moved_piece = b.push(move)
+                                self.check_king_or_rook_move(moved_piece)
                                 self.change_curr_player()
                                 self.g.remake_board(b)
                             else:
@@ -116,13 +112,8 @@ class Game:
                                     "This move is not possible! Please make another move"
                                 )
                 else:
-                    ai_calculating_board = b.board.copy()
-                    new_position, moved_piece = self.ai.move(ai_calculating_board)
-                    if isinstance(moved_piece, p.King) or isinstance(
-                        moved_piece, p.Rook
-                    ):
-                        if not moved_piece.has_moved:
-                            moved_piece.has_moved = True
+                    moved_piece = self.ai.move()
+                    self.check_king_or_rook_move(moved_piece)
                     self.g.remake_board(b)
                     self.change_curr_player()
 

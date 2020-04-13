@@ -9,84 +9,129 @@ import piece as p
 class Board:
     ul = 0  # upper limit
     ll = 7  # lower limit
+    notation_dict_x = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
+    notation_dict_y = {0: 8, 1: 7, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1}
 
     def __init__(self, pieces):
+        self.board = []  # treat board as a stack
         self.make_empty_board()
         self.fill_board(pieces)
-        self.prev_board = self.board
 
     def make_empty_board(self):
-        self.board = np.zeros((8, 8), dtype=object)
+        self.board.append(np.zeros((8, 8), dtype=object))
 
     def fill_board(self, pieces):
         for piece in pieces:
             self.place_piece(piece)
 
     def place_piece(self, piece):
-        self.board[piece.pos[1], piece.pos[0]] = piece
+        self.board[-1][piece.pos[1], piece.pos[0]] = piece
 
-    def full_move(self, parent_position, pos_start, pos_end):
-        self.prev_board = self.board.copy()
-        piece = parent_position[pos_start[1], pos_start[0]]
-        parent_position[pos_end[1], pos_end[0]] = piece
-        parent_position[pos_start[1], pos_start[0]] = 0
-        self.update_piece_pos(parent_position)
+    def change_notation(self, pos):
+        x = pos[0]
+        y = pos[1]
+        new_x = self.notation_dict_x[x]
+        new_y = self.notation_dict_y[y]
+        return (new_x, new_y)
 
-        self.check_castled(piece, pos_start, pos_end)
-        self.check_pawn_prom(piece, pos_end)
-        return piece
+    def full_move(self, pos_start, pos_end):
+        board_x_start = pos_start[1]
+        board_y_start = pos_start[0]
+        board_x_end = pos_end[1]
+        board_y_end = pos_end[0]
 
-    def get_all_possible_moves(self, parent_position, curr_player):
-        possible_moves = []
-        for piece in self.get_pieces(parent_position):
-            if piece.color == curr_player:
-                for move_end_pos in piece.possible_moves(self):
-                    start_pos = piece.pos
-                    possible_moves.append([piece, start_pos, move_end_pos])
-        return possible_moves
+        curr_board = self.board[-1]
 
-    def get_all_legal_moves(self, parent_position, curr_player):
+        moved_piece = curr_board[board_x_start, board_y_start]
+        prev_board = curr_board.copy()
+        curr_board[board_x_end, board_y_end] = moved_piece
+        curr_board[board_x_start, board_y_start] = 0
+
+        self.update_piece_pos2(moved_piece, pos_end)
+
+        self.check_castled(moved_piece, pos_start, pos_end)
+        self.check_pawn_prom(moved_piece, pos_end)
+        return prev_board, moved_piece
+
+    def restore_old_board(self, prev_board):
+        self.board[-1][self.board[-1] != prev_board] = prev_board[
+            self.board[-1] != prev_board
+        ]
+
+    def get_all_legal_moves(self):
         legal_moves = []
-        prev_board = parent_position.copy()
-        for piece in self.get_pieces(parent_position):
-            if piece.color == curr_player:
-                # if not curr_player:
-                #
-                #     from IPython import embed
-                #
-                #     embed()
-                for move_end_pos in piece.possible_moves(self):
-                    start_pos = piece.pos
-                    self.full_move(parent_position, start_pos, move_end_pos)
-                    if not self.is_check(parent_position, curr_player):
-                        legal_moves.append([start_pos, move_end_pos])
-                    parent_position[parent_position != prev_board] = prev_board[
-                        parent_position != prev_board
-                    ]
-                    self.update_piece_pos(parent_position)
+        for piece in self.get_pieces():
+            if piece.color == self.get_curr_player():
+                for pos_end in piece.possible_moves(self):
+                    pos_start = piece.pos
+
+                    # prev_board, moved_piece = self.full_move(pos_start, pos_end)
+
+                    ###############
+                    board_x_start = pos_start[1]
+                    board_y_start = pos_start[0]
+                    board_x_end = pos_end[1]
+                    board_y_end = pos_end[0]
+
+                    curr_board = self.board[-1]
+
+                    moved_piece = curr_board[board_x_start, board_y_start]
+                    prev_board = curr_board.copy()
+                    curr_board[board_x_end, board_y_end] = moved_piece
+                    curr_board[board_x_start, board_y_start] = 0
+
+                    self.update_piece_pos2(moved_piece, pos_end)
+
+                    self.check_castled(moved_piece, pos_start, pos_end)
+                    self.check_pawn_prom(moved_piece, pos_end)
+                    ############
+
+                    if not self.is_check():
+                        legal_moves.append([pos_start, pos_end])
+                    self.restore_old_board(prev_board)
+
+                    self.update_piece_pos2(moved_piece, pos_start)
+
+        # legal_moves = np.array(legal_moves)
+        #
+        # result = [
+        #     (self.change_notation(start_pos), self.change_notation(end_pos))
+        #     for start_pos, end_pos in zip(legal_moves[:, 0], legal_moves[:, 1])
+        # ]
+
         return legal_moves
 
-    def get_child_positions(self, parent_position, curr_player):
-        child_positions = []
-        prev_board = parent_position.copy()
-        for move in self.get_all_legal_moves(parent_position, curr_player):
-            # from IPython import embed
-            #
-            # embed()
-            self.full_move(parent_position, move[0], move[1])
-            child_positions += [parent_position.copy()]
-            parent_position[parent_position != prev_board] = prev_board[
-                parent_position != prev_board
-            ]
-            self.update_piece_pos(parent_position)
-        return child_positions
+    def update_piece_pos2(self, piece, new_pos):
+        piece.pos = new_pos
+        pass
 
-    def is_check(self, position, curr_player):
-        for piece in self.get_pieces(position):
-            if piece.color != curr_player:
+    def print_piece_positions(self):
+        for piece in self.get_pieces():
+            print("{}: -- > {}".format(piece, self.change_notation(piece.pos)))
+
+    def push(self, move):
+        # prev_piece_pos = self.b.get_pieces()
+        prev_board, moved_piece = self.full_move(move[0], move[1])
+        self.board.append(self.board[-1])
+        self.board[-2] = prev_board
+        return moved_piece
+
+    def pop(self, moved_piece, start_pos):
+        self.board.pop()
+        moved_piece.pos = start_pos
+
+    def is_check(self):
+        for piece in self.get_pieces():
+            if piece.color != self.get_curr_player():
                 for move_pos in piece.possible_moves(self):
-                    if move_pos == self.get_king_pos(position, curr_player):
+                    if move_pos == self.get_king_pos():
                         return True
+
+    def get_curr_player(self):
+        if (len(self.board) % 2) == 0:
+            return False
+        else:
+            return True
 
     def check_castled(self, piece, pos_start, pos_end):
         if isinstance(piece, p.King):
@@ -100,7 +145,7 @@ class Board:
             pos_diff = pos_start[0] - pos_end[0]
             # short castleing
             if pos_diff == -2:
-                self.board[king.rel_pos(1, 0)[1], king.rel_pos(1, 0)[0]] = 0
+                self.board[-1][king.rel_pos(1, 0)[1], king.rel_pos(1, 0)[0]] = 0
                 rook = p.Rook(
                     king.rel_pos(-1, 0),
                     color=king.color,
@@ -110,7 +155,7 @@ class Board:
                 self.place_piece(rook)
             # long castleing
             elif pos_diff == 2:
-                self.board[king.rel_pos(-2, 0)[1], king.rel_pos(-2, 0)[0]] = 0
+                self.board[-1][king.rel_pos(-2, 0)[1], king.rel_pos(-2, 0)[0]] = 0
                 rook = p.Rook(
                     king.rel_pos(1, 0),
                     color=king.color,
@@ -139,17 +184,17 @@ class Board:
                 self.place_piece(piece)
         return piece
 
-    def get_pieces(self, position):
-        return [field for field in position.reshape(64) if field != 0]
+    def get_pieces(self):
+        return [field for field in self.board[-1].reshape(64) if field != 0]
 
-    def get_king_pos(self, position, color):
-        for piece in self.get_pieces(position):
+    def get_king_pos(self):
+        for piece in self.get_pieces():
             if isinstance(piece, p.King):
-                if piece.color is color:
+                if piece.color is self.get_curr_player():
                     return piece.pos
 
     def is_empty(self, pos):
-        return self.board[pos[1], pos[0]] == 0
+        return self.board[-1][pos[1], pos[0]] == 0
 
     def on_board(self, pos):
         return (
@@ -166,17 +211,17 @@ class Board:
             return False
 
     def piece_color(self, pos):
-        return self.board[pos[1], pos[0]].color
+        return self.board[-1][pos[1], pos[0]].color
 
-    def find_board_coordinates(self, piece):
-        for x in range(8):
-            for y in range(8):
-                if piece == self.board[y, x]:
-                    return (x, y)
-
-    def update_piece_pos(self, position):
-        for piece in self.get_pieces(position):
-            if piece.pos != self.find_board_coordinates(piece):
-                moved_piece = piece
-                piece.pos = self.find_board_coordinates(piece)
-                return moved_piece
+    # def find_piece_coordinates(self, piece):
+    #     for x in range(8):
+    #         for y in range(8):
+    #             if piece == self.board[-1][y, x]:
+    #                 return (x, y)
+    #
+    # def update_piece_pos(self):
+    #     for piece in self.get_pieces():
+    #         if piece.pos != self.find_piece_coordinates(piece):
+    #             moved_piece = piece
+    #             piece.pos = self.find_piece_coordinates(piece)
+    #             return moved_piece

@@ -48,7 +48,7 @@ class GUI:
         )
 
     def fill_board(self, b):
-        for piece in b.get_pieces(b.board):
+        for piece in b.get_pieces():
             self.win.blit(
                 pygame.transform.scale(piece.image, (self.SQ_LEN, self.SQ_LEN)),
                 pygame.Rect(

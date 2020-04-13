@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 import pygame
 from pygame.image import load
 
@@ -11,10 +13,8 @@ import ai
 
 
 class Game:
-    notation_dict_x = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
-    notation_dict_y = {0: 8, 1: 7, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1}
-
     def __init__(self, starting_player=True):
+
         self.is_player_white = starting_player
         pieces = self.create_pieces()
         b = board.Board(pieces)
@@ -24,22 +24,32 @@ class Game:
 
     def create_pieces(self):
         ps = [
-            p.Rook((0, 7), color=True, value=5, image=load("images/w_rook.png")),
-            p.Rook((7, 7), color=True, value=5, image=load("images/w_rook.png")),
-            p.Bishop((2, 7), color=True, value=3, image=load("images/w_bishop.png")),
-            p.Bishop((5, 7), color=True, value=3, image=load("images/w_bishop.png")),
-            p.Knight((1, 7), color=True, value=3, image=load("images/w_knight.png")),
-            p.Knight((6, 7), color=True, value=3, image=load("images/w_knight.png")),
-            p.Rook((0, 0), color=False, value=-5, image=load("images/b_rook.png")),
-            p.Rook((7, 0), color=False, value=-5, image=load("images/b_rook.png")),
-            p.Knight((1, 0), color=False, value=-3, image=load("images/b_knight.png")),
-            p.Knight((6, 0), color=False, value=-3, image=load("images/b_knight.png")),
-            p.Bishop((2, 0), color=False, value=-3, image=load("images/b_bishop.png")),
-            p.Bishop((5, 0), color=False, value=-3, image=load("images/b_bishop.png")),
-            p.King((4, 7), color=True, value=1000, image=load("images/w_king.png")),
-            p.Queen((3, 7), color=True, value=9, image=load("images/w_queen.png")),
-            p.King((4, 0), color=False, value=-1000, image=load("images/b_king.png")),
-            p.Queen((3, 0), color=False, value=-9, image=load("images/b_queen.png")),
+            p.Rook((0, 7), color=True, value=5, image=load("../images/w_rook.png")),
+            p.Rook((7, 7), color=True, value=5, image=load("../images/w_rook.png")),
+            p.Bishop((2, 7), color=True, value=3, image=load("../images/w_bishop.png")),
+            p.Bishop((5, 7), color=True, value=3, image=load("../images/w_bishop.png")),
+            p.Knight((1, 7), color=True, value=3, image=load("../images/w_knight.png")),
+            p.Knight((6, 7), color=True, value=3, image=load("../images/w_knight.png")),
+            p.Rook((0, 0), color=False, value=-5, image=load("../images/b_rook.png")),
+            p.Rook((7, 0), color=False, value=-5, image=load("../images/b_rook.png")),
+            p.Knight(
+                (1, 0), color=False, value=-3, image=load("../images/b_knight.png")
+            ),
+            p.Knight(
+                (6, 0), color=False, value=-3, image=load("../images/b_knight.png")
+            ),
+            p.Bishop(
+                (2, 0), color=False, value=-3, image=load("../images/b_bishop.png")
+            ),
+            p.Bishop(
+                (5, 0), color=False, value=-3, image=load("../images/b_bishop.png")
+            ),
+            p.King((4, 7), color=True, value=1000, image=load("../images/w_king.png")),
+            p.Queen((3, 7), color=True, value=9, image=load("../images/w_queen.png")),
+            p.King(
+                (4, 0), color=False, value=-1000, image=load("../images/b_king.png")
+            ),
+            p.Queen((3, 0), color=False, value=-9, image=load("../images/b_queen.png")),
         ]
         for i in range(8):
             ps += [
@@ -47,13 +57,13 @@ class Game:
                     (i, 6),
                     color=True,
                     value=1,
-                    image=pygame.image.load("images/w_pawn.png"),
+                    image=pygame.image.load("../images/w_pawn.png"),
                 ),
                 p.Pawn(
                     (i, 1),
                     color=False,
                     value=-1,
-                    image=pygame.image.load("images/b_pawn.png"),
+                    image=pygame.image.load("../images/b_pawn.png"),
                 ),
             ]
         return ps
@@ -67,13 +77,6 @@ class Game:
 
     def change_curr_player(self):
         self.is_player_white = not self.is_player_white
-
-    def change_notation(self, pos):
-        x = pos[0]
-        y = pos[1]
-        new_x = self.notation_dict_x[x]
-        new_y = self.notation_dict_y[y]
-        return (new_x, new_y)
 
     def check_king_or_rook_move(self, moved_piece):
         if isinstance(moved_piece, p.King) or isinstance(moved_piece, p.Rook):

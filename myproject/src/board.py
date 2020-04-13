@@ -9,8 +9,6 @@ import piece as p
 class Board:
     ul = 0  # upper limit
     ll = 7  # lower limit
-    notation_dict_x = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
-    notation_dict_y = {0: 8, 1: 7, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1}
 
     def __init__(self, pieces):
         self.board = []  # treat board as a stack
@@ -26,13 +24,6 @@ class Board:
 
     def place_piece(self, piece):
         self.board[-1][piece.pos[1], piece.pos[0]] = piece
-
-    def change_notation(self, pos):
-        x = pos[0]
-        y = pos[1]
-        new_x = self.notation_dict_x[x]
-        new_y = self.notation_dict_y[y]
-        return (new_x, new_y)
 
     def full_move(self, pos_start, pos_end):
         board_x_start = pos_start[1]
@@ -150,7 +141,7 @@ class Board:
                     king.rel_pos(-1, 0),
                     color=king.color,
                     value=rook_value,
-                    image=load("images/{}_rook.png".format(rook_color)),
+                    image=load("../images/{}_rook.png".format(rook_color)),
                 )
                 self.place_piece(rook)
             # long castleing
@@ -160,7 +151,7 @@ class Board:
                     king.rel_pos(1, 0),
                     color=king.color,
                     value=rook_value,
-                    image=load("images/{}_rook.png".format(rook_color)),
+                    image=load("../images/{}_rook.png".format(rook_color)),
                 )
                 self.place_piece(rook)
 
@@ -171,7 +162,7 @@ class Board:
                     (pos_end[0], pos_end[1]),
                     color=piece.color,
                     value=9,
-                    image=load("images/w_queen.png"),
+                    image=load("../images/w_queen.png"),
                 )
                 self.place_piece(piece)
             elif (piece.color is False) & (piece.pos[1] == self.ll):
@@ -179,7 +170,7 @@ class Board:
                     (pos_end[0], pos_end[1]),
                     color=piece.color,
                     value=-9,
-                    image=load("images/b_queen.png"),
+                    image=load("../images/b_queen.png"),
                 )
                 self.place_piece(piece)
         return piece

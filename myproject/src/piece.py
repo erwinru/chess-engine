@@ -45,11 +45,10 @@ class Piece:
         return m
 
     def __repr__(self):
-        if self.color is True:
-            color = "w"
-        else:
-            color = "b"
-        return "{}_{}".format(self.name, color)
+        name = self.name
+        if self.color is False:
+            name = name.lower()
+        return "{}".format(self.name)
 
 
 class Pawn(Piece):
@@ -93,7 +92,7 @@ class Rook(Piece):
 
 
 class Knight(Piece):
-    name = "Kn"
+    name = "n"
 
     def possible_moves(self, b):
         comb = itertools.permutations((1, -1, 2, -2), 2)

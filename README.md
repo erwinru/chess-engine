@@ -10,4 +10,4 @@ want to play against yourself or against an AI.
 The AI is based on a simple Min-Max algorithm and looks ahead 2 moves. It's therefore not the best
 AI to play against.
 
-![Chess-engine example](/img/chess-engine.png)
+![Chess-engine example](/img/readme-example.png)

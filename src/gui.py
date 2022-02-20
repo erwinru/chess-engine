@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import pygame
+import pygame as pg
 
 
 class GUI:
@@ -12,17 +12,17 @@ class GUI:
     BOARD_COLOR = (GRAY_LIGHT, GRAY_DARK)
 
     def __init__(self, b):
-        pygame.init()
+        pg.init()
         self.make_window()
         self.make_empty_board()
         self.fill_board(b)
-        pygame.display.flip()
+        pg.display.flip()
 
     def make_window(self):
-        self.win = pygame.display.set_mode(
+        self.win = pg.display.set_mode(
             (8 * self.SQ_LEN, 8 * self.SQ_LEN)
         )
-        pygame.display.set_caption("Chess")
+        pg.display.set_caption("Chess")
 
     def make_empty_board(self):
         self.win.fill(self.BOARD_COLOR[0])
@@ -42,7 +42,7 @@ class GUI:
         return (x + y + 2) % 2 == 1
 
     def draw_square(self, x, y, color):
-        pygame.draw.rect(
+        pg.draw.rect(
             self.win,
             color,
             (x * self.SQ_LEN, y * self.SQ_LEN, self.SQ_LEN, self.SQ_LEN),
@@ -52,10 +52,10 @@ class GUI:
     def fill_board(self, b):
         for piece in b.get_pieces():
             self.win.blit(
-                pygame.transform.scale(
+                pg.transform.scale(
                     piece.image, (self.SQ_LEN, self.SQ_LEN)
                 ),
-                pygame.Rect(
+                pg.Rect(
                     (
                         (piece.pos[0]) * self.SQ_LEN,
                         (piece.pos[1]) * self.SQ_LEN,
@@ -67,23 +67,20 @@ class GUI:
     def remake_board(self, b):
         self.make_empty_board()
         self.fill_board(b)
-        pygame.display.flip()
+        pg.display.flip()
 
     def update_move(self, piece, start, end):
         self.make_empty(start, end)
         self.place_image(piece)
-        pygame.display.flip()
+        pg.display.flip()
 
     def place_image(self, piece):
         self.win.blit(
-            pygame.transform.scale(
+            pg.transform.scale(
                 piece.image, (self.SQ_LEN, self.SQ_LEN)
             ),
-            pygame.Rect(
-                (
-                    (piece.pos[0]) * self.SQ_LEN,
-                    (piece.pos[1]) * self.SQ_LEN,
-                ),
+            pg.Rect(
+                ((piece.pos[0]) * self.SQ_LEN, (piece.pos[1]) * self.SQ_LEN),
                 (self.SQ_LEN, self.SQ_LEN),
             ),
         )

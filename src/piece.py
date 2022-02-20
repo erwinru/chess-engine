@@ -24,15 +24,9 @@ class Piece:
                 step = direction
                 for j in range(start, stop, step):
                     if orientation == "diagonal":
-                        if ori == "v":
-                            pos = self.rel_pos(j, j)
-                        elif ori == "h":
-                            pos = self.rel_pos(-j, j)
+                        pos = self.rel_pos(j, j) if ori == "v" else self.rel_pos(-j, j)
                     elif orientation == "straight":
-                        if ori == "v":
-                            pos = self.rel_pos(0, j)
-                        elif ori == "h":
-                            pos = self.rel_pos(j, 0)
+                        pos = self.rel_pos(0, j) if ori == "v" else self.rel_pos(j, 0)
                     if b.on_board(pos):
                         if b.is_empty(pos):
                             m.append(pos)
@@ -144,7 +138,6 @@ class King(Piece):
             m.append(self.rel_pos(2, 0))
         if self.long_castleing(b):
             m.append(self.rel_pos(-2, 0))
-        # print("{} King:".format(self.color), m)
         return m
 
     def short_castleing(self, b):
@@ -152,13 +145,9 @@ class King(Piece):
             if b.is_empty(self.rel_pos(1, 0)) & b.is_empty(
                 self.rel_pos(2, 0)
             ):
-                if isinstance(
-                    b.board[self.rel_pos(3, 0)[1], self.rel_pos(3, 0)[0]],
-                    Rook,
-                ):
-                    if not b.board[
-                        self.rel_pos(3, 0)[1], self.rel_pos(3, 0)[0]
-                    ].has_moved:
+                rook = b.board[-1][self.rel_pos(3, 0)[1], self.rel_pos(3, 0)[0]]
+                if isinstance(rook, Rook):
+                    if not rook.has_moved:
                         return True
         return False
 

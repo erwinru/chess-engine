@@ -1,0 +1,4 @@
+/env
+src/data/cache.p
+
+__pycache__

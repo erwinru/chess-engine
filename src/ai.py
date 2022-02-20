@@ -5,18 +5,9 @@ import pickle
 
 
 class AI:
-    depth = 3
+    depth = 2
 
-    notation_dict_x = {
-        0: "a",
-        1: "b",
-        2: "c",
-        3: "d",
-        4: "e",
-        5: "f",
-        6: "g",
-        7: "h",
-    }
+    notation_dict_x = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
     notation_dict_y = {0: 8, 1: 7, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1}
 
     board_caches = {}
